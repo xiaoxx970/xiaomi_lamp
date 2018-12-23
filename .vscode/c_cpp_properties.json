@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "C:\\Users\\ljp98\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\**",
-                "C:\\Users\\ljp98\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.21\\**"
+                "C:\\Users\\ljp98\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.21\\**",
+                "C:\\Users\\ljp98\\Documents\\arduino-1.8.5\\libraries\\**",
+                "C:\\Users\\ljp98\\Documents\\arduino-1.8.5\\libraries\\**"
             ],
             "forcedInclude": [
                 "C:\\Users\\ljp98\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.21\\cores\\arduino\\Arduino.h"
