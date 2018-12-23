@@ -1,5 +1,5 @@
 /***************************************************
-  触控台灯V0.8
+  触控台灯V0.9
   features：
     1、单个按键控制台灯开关和PWM亮度调整
     2、MQTT连接云端通过网页或手机控制亮度和开关
@@ -11,7 +11,7 @@
     3、增加debug信息输出到mqtt
     4、亮度保存
 
-  Written by Xiaoxx for selfuse.
+  Written by Xiaoxx for self use.
  ****************************************************/
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
@@ -78,7 +78,7 @@ uint16_t potlightVaule = 0;
 uint16_t potledState = 0;
 const char* host = "esp-update";
 int otaupdate = 0;
-
+uint8_t retries = 20;
 
 ///********************主页服务器*******************/
 //String getContentType(String filename) {
@@ -354,17 +354,18 @@ void MQTT_connect() {
 
   //Serial.print("Connecting to MQTT... ");
 
-  uint8_t retries = 20;
-  if ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
-    //Serial.println(mqtt.connectErrorString(ret));
-    //Serial.println("Retrying MQTT connection in 5 seconds...");
-    mqtt.disconnect();
-    //delay(5000);  // wait 5 seconds
-    //retries--;
-    //if (retries == 0) {
+  retries--;
+  if (retries == 0) {
+    if ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+      mqtt.disconnect();
+      return;
+      //Serial.println(mqtt.connectErrorString(ret));
+      //Serial.println("Retrying MQTT connection in 5 seconds...");
+      //delay(5000);  // wait 5 seconds
       // basically die and wait for WDT to reset me
-     // while (1);
-    //}
+      //while (1);
+    }
+    retries = 20;
   }
   //Serial.println("MQTT Connected!");
 }
