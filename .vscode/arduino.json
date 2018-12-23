@@ -1,0 +1,4 @@
+{
+    "programmer": "ArduinoISP",
+    "board": "arduino:avr:uno"
+}
