@@ -26,8 +26,8 @@
 
 /************************* WiFi Access Point *********************************/
 
-#define WLAN_SSID       "ljp"
-#define WLAN_PASS       "18852513496"
+#define WLAN_SSID "ljp"
+#define WLAN_PASS "18852513496"
 
 /************************* Web Server Define *********************************/
 ESP8266WebServer httpServer(80);
@@ -35,10 +35,10 @@ ESP8266HTTPUpdateServer httpUpdater;
 
 /************************* Adafruit.io Setup *********************************/
 
-#define AIO_SERVER      "io.adafruit.com"
-#define AIO_SERVERPORT  1883                   // use 8883 for SSL
-#define AIO_USERNAME    "xiaoxx"
-#define AIO_KEY         "eb0927276b254479b700c2d9e94663d0"
+#define AIO_SERVER "io.adafruit.com"
+#define AIO_SERVERPORT 1883 // use 8883 for SSL
+#define AIO_USERNAME "xiaoxx"
+#define AIO_KEY "eb0927276b254479b700c2d9e94663d0"
 
 /************ Global State (you don't need to change this!) ******************/
 
@@ -71,147 +71,82 @@ const int ledPin = 3;
 
 unsigned long duration;
 int ledState = 0;
-int light = 655 ;
+int light = 655;
 int cplight;
 bool plus = 1;
 uint16_t potlightVaule = 0;
 uint16_t potledState = 0;
-const char* host = "esp-update";
+const char *host = "esp-update";
 int otaupdate = 0;
 uint8_t retries = 20;
 
-///********************主页服务器*******************/
-//String getContentType(String filename) {
-//  if (httpServer.hasArg("download")) return "application/octet-stream";
-//  else if (filename.endsWith(".htm")) return "text/html";
-//  else if (filename.endsWith(".html")) return "text/html";
-//  else if (filename.endsWith(".css")) return "text/css";
-//  else if (filename.endsWith(".js")) return "application/javascript";
-//  else if (filename.endsWith(".png")) return "image/png";
-//  else if (filename.endsWith(".gif")) return "image/gif";
-//  else if (filename.endsWith(".jpg")) return "image/jpeg";
-//  else if (filename.endsWith(".ico")) return "image/x-icon";
-//  else if (filename.endsWith(".xml")) return "text/xml";
-//  else if (filename.endsWith(".pdf")) return "application/x-pdf";
-//  else if (filename.endsWith(".zip")) return "application/x-zip";
-//  else if (filename.endsWith(".gz")) return "application/x-gzip";
-//  return "text/plain";
-//}
-///* NotFound处理
-//   用于处理没有注册的请求地址
-//   一般是处理一些页面请求
-//*/
-//void handleNotFound() {
-//  String path = httpServer.uri();
-//  Serial.print("load url:");
-//  Serial.println(path);
-//  String contentType = getContentType(path);
-//  String pathWithGz = path + ".gz";
-//  if (SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)) {
-//    if (SPIFFS.exists(pathWithGz))
-//      path += ".gz";
-//    File file = SPIFFS.open(path, "r");
-//    size_t sent = httpServer.streamFile(file, contentType);
-//    file.close();
-//    return;
-//  }
-//  String message = "File Not Found\n\n";
-//  message += "URI: ";
-//  message += httpServer.uri();
-//  message += "\nMethod: ";
-//  message += ( httpServer.method() == HTTP_GET ) ? "GET" : "POST";
-//  message += "\nArguments: ";
-//  message += httpServer.args();
-//  message += "\n";
-//  for ( uint8_t i = 0; i < httpServer.args(); i++ ) {
-//    message += " " + httpServer.argName ( i ) + ": " + httpServer.arg ( i ) + "\n";
-//  }
-//  httpServer.send ( 404, "text/plain", message );
-//}
-//void handleMain() {
-//  /* 返回信息给浏览器（状态码，Content-type， 内容）
-//     这里是访问当前设备ip直接返回一个String
-//  */
-//  Serial.print("handleMain");
-//  File file = SPIFFS.open("/index.html", "r");
-//  size_t sent = httpServer.streamFile(file, "text/html");
-//  file.close();
-//  return;
-//}
-///* 引脚更改处理
-//   访问地址为htp://192.162.xxx.xxx/pin?a=XXX的时候根据a的值来进行对应的处理
-//*/
-//void handlePin() {
-//  if (httpServer.hasArg("a")) { // 请求中是否包含有a的参数
-//    String action = httpServer.arg("a"); // 获得a参数的值
-//    if (action == "on") { // a=on
-//      ledState = 1;
-//      httpServer.send ( 200, "text/html", "lamp has turned on"); return; // 返回数据
-//    } else if (action == "off") { // a=off
-//      ledState = 0;
-//      httpServer.send ( 200, "text/html", "lamp has turned off"); return;
-//    }
-//    httpServer.send ( 200, "text/html", "unknown action"); return;
-//  }
-//  httpServer.send ( 200, "text/html", "action no found");
-//}
-///*****************************************************************/
-
 void pwm()
 {
-  if (digitalRead(buttonPin)) {   //如果按键放开了还是进入了pwm那就把灯关了返回
+  //如果按键放开了还是进入了pwm那就把灯关了返回
+  if (digitalRead(buttonPin))
+  {
     ledState = 0;
     return;
   }
   plus = !plus;
-  while (digitalRead(buttonPin) == LOW & light >= 10 & light <= 1024) {
+  while (digitalRead(buttonPin) == LOW & light >= 10 & light <= 1024)
+  {
     //Serial.println("at pwm.while");
     //Serial.println(light);
     plus == 1 ? light += 1 : light -= 1;
-    if (light > 1024) light = 1024;
-    if (light < 10) light = 10;
+    if (light > 1024)
+      light = 1024;
+    if (light < 10)
+      light = 10;
     delay(2);
     analogWrite(ledPin, light);
   }
   //potlight.publish(light);   //上传亮度
 }
 
-void event ()
+void event()
 {
   delay(10);
-  if (digitalRead(buttonPin) == LOW) {
-    if (ledState == 1) {
+  if (digitalRead(buttonPin) == LOW)
+  {
+    if (ledState == 1)
+    {
       duration = pulseIn(buttonPin, LOW, 600000);
-      if (duration == 0)    //如果长按就进入pwm程序
+      if (duration == 0)  //如果长按就进入pwm程序
         pwm();
-      else                  //否则把灯关掉
+      else                //否则把灯关掉
         ledState = 0;
     }
-    else                    //如果灯是关着的
+    else                  //如果灯是关着的
       ledState = 1;
   }
   //potStatus.publish(ledState); //上传开关
-  while (digitalRead(buttonPin) == LOW);  //等待按键抬起
+  while (digitalRead(buttonPin) == LOW)
+    ; //等待按键抬起
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
-//  SPIFFS.begin();
+  //  SPIFFS.begin();
   //delay(10);
   Serial.println("");
   Serial.println("Welcome to use Xiaoxx cloud lamp");
-  Serial.println("version 0.7"); Serial.println();
+  Serial.println("version 0.7");
+  Serial.println();
   Serial.print("Connecting to ");
   Serial.print(WLAN_SSID);
   /**************连接WiFi和MQTT服务器*****************/
   WiFi.begin(WLAN_SSID, WLAN_PASS);
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
   Serial.println();
   Serial.println("WiFi connected");
-  Serial.println("IP address: "); Serial.println(WiFi.localIP());
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
   mqtt.subscribe(&ledBrightness);
   mqtt.subscribe(&ledStatus);
   mqtt.subscribe(&isupdate);
@@ -233,47 +168,60 @@ void setup() {
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    if (error == OTA_AUTH_ERROR)
+      Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR)
+      Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR)
+      Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR)
+      Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR)
+      Serial.println("End Failed");
   });
   ArduinoOTA.begin();
   Serial.println("OTA Ready");
   MDNS.begin(host);
   httpUpdater.setup(&httpServer);
-//  httpServer.on ("/", handleMain); // 绑定‘/’地址到handleMain方法处理
-//  httpServer.on ("/pin", HTTP_GET, handlePin); // 绑定‘/pin’地址到handlePin方法处理
-//  httpServer.onNotFound ( handleNotFound ); // NotFound处理
+  //  httpServer.on ("/", handleMain); // 绑定‘/’地址到handleMain方法处理
+  //  httpServer.on ("/pin", HTTP_GET, handlePin); // 绑定‘/pin’地址到handlePin方法处理
+  //  httpServer.onNotFound ( handleNotFound ); // NotFound处理
   httpServer.begin();
-  Serial.println ( "HTTP server started" );
+  Serial.println("HTTP server started");
   MDNS.addService("http", "tcp", 80);
   Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", host);
   potupdate.publish(otaupdate);
 }
 
-void loop() {
+void loop()
+{
   MQTT_connect();
   Adafruit_MQTT_Subscribe *subscription;
-  while ((subscription = mqtt.readSubscription(200))) {   //订阅MQTT
-    if (subscription == &ledBrightness) {
+  while ((subscription = mqtt.readSubscription(200)))
+  { //订阅MQTT
+    if (subscription == &ledBrightness)
+    {
       Serial.print(F("Got LED Brightness : "));
       cplight = light;
       light = atoi((char *)ledBrightness.lastread);
       Serial.println(light);
-      if (ledState == 1 && light >= 10) {       //灯开着而且收到大于10的亮度，执行亮度
-        for (; cplight < light; cplight++) {
+      if (ledState == 1 && light >= 10)
+      { //灯开着而且收到大于10的亮度，执行亮度
+        for (; cplight < light; cplight++)
+        {
           analogWrite(ledPin, cplight);
           delayMicroseconds(500);
         }
-        for (; cplight > light; cplight--) {
+        for (; cplight > light; cplight--)
+        {
           analogWrite(ledPin, cplight);
           delayMicroseconds(500);
         }
       }
-      else if (ledState == 1 && light < 10) {   //灯开着但是亮度调到了10以下，执行关灯并把亮度设回10
-        for (int i = cplight; i > 0; i--) {
+      else if (ledState == 1 && light < 10)
+      { //灯开着但是亮度调到了10以下，执行关灯并把亮度设回10
+        for (int i = cplight; i > 0; i--)
+        {
           analogWrite(ledPin, i);
           delayMicroseconds(500);
         }
@@ -284,49 +232,60 @@ void loop() {
         break;
       }
     }
-    if (subscription == &ledStatus) {
+    if (subscription == &ledStatus)
+    {
       Serial.print(F("Got LED Status : "));
       ledState = atoi((char *)ledStatus.lastread);
       Serial.println(ledState);
     }
-    if (subscription == &isupdate) {
+    if (subscription == &isupdate)
+    {
       Serial.print(F("Got OTA Status : "));
       otaupdate = atoi((char *)isupdate.lastread);
       Serial.println(otaupdate);
-      if (otaupdate) {
+      if (otaupdate)
+      {
         Serial.println("OTA response on.");
       }
       else
         Serial.println("OTA response off.");
     }
   }
-  if (otaupdate == 1) {
+  if (otaupdate == 1)
+  {
     httpServer.handleClient();
     ArduinoOTA.handle();
   }
-  if (!digitalRead(buttonPin)) {
+  if (!digitalRead(buttonPin))
+  {
     event();
-    if ((light > (potlightVaule + 5)) || (light < (potlightVaule - 5))) {
+    if ((light > (potlightVaule + 5)) || (light < (potlightVaule - 5)))
+    {
       potlightVaule = light;
       Serial.print(F("Sending light val "));
       Serial.print(potlightVaule);
       Serial.print("...");
-      if (! potlight.publish(potlightVaule)) {
+      if (!potlight.publish(potlightVaule))
+      {
         Serial.println(F("Failed"));
-      } else {
+      }
+      else
+      {
         Serial.println(F("OK!"));
       }
     }
-
   }
-  if (ledState != potledState) {
+  if (ledState != potledState)
+  {
     if (ledState == 1)
-      for (int i = 0; i < light; i++) {
+      for (int i = 0; i < light; i++)
+      {
         analogWrite(ledPin, i);
         delayMicroseconds(500);
       }
     else
-      for (int i = light; i >= 0; i--) {
+      for (int i = light; i >= 0; i--)
+      {
         analogWrite(ledPin, i);
         delayMicroseconds(500);
       }
@@ -334,9 +293,12 @@ void loop() {
     Serial.print(F("Sending switch val "));
     Serial.print(potledState);
     Serial.print("...");
-    if (! potStatus.publish(potledState)) {
+    if (!potStatus.publish(potledState))
+    {
       Serial.println(F("Failed"));
-    } else {
+    }
+    else
+    {
       Serial.println(F("OK!"));
     }
   }
@@ -344,19 +306,23 @@ void loop() {
 
 // Function to connect and reconnect as necessary to the MQTT server.
 // Should be called in the loop function and it will take care if connecting.
-void MQTT_connect() {
+void MQTT_connect()
+{
   int8_t ret;
 
   // Stop if already connected.
-  if (mqtt.connected()) {
+  if (mqtt.connected())
+  {
     return;
   }
 
   //Serial.print("Connecting to MQTT... ");
 
   retries--;
-  if (retries == 0) {
-    if ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+  if (retries == 0)
+  {
+    if ((ret = mqtt.connect()) != 0)
+    { // connect will return 0 for connected
       mqtt.disconnect();
       return;
       //Serial.println(mqtt.connectErrorString(ret));
