@@ -3,7 +3,7 @@
   features：
     1、单个按键控制台灯开关和PWM亮度调整
     2、MQTT连接云端通过网页或手机控制亮度和开关
-    3、OTA以及网页端可以升级固件
+    3、OTA以及网页端IP/update可以升级固件
     4、渐亮渐暗
     5、OTA开关通过MQTT控制（0.8添加）
   plan：
@@ -132,7 +132,7 @@ void setup()
   //delay(10);
   Serial.println("");
   Serial.println("Welcome to use Xiaoxx cloud lamp");
-  Serial.println("version 0.7");
+  Serial.println("version 0.9");
   Serial.println();
   Serial.print("Connecting to ");
   Serial.print(WLAN_SSID);
