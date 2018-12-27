@@ -1,11 +1,12 @@
 /***************************************************
-  触控台灯V0.9
+  触控台灯V1.0
   features：
     1、单个按键控制台灯开关和PWM亮度调整
     2、MQTT连接云端通过网页或手机控制亮度和开关
     3、OTA以及网页端IP/update可以升级固件
     4、渐亮渐暗
     5、OTA开关通过MQTT控制（0.8添加）
+    6、（1.0）大大降低了开关灯的延迟，成功用上了中断
   plan：
     1、增加双色调节通过短按+长按
     3、增加debug信息输出到mqtt
@@ -165,56 +166,53 @@ void loop()
     buttonFlag = 0;
     event();
   }
-  else
+  if (ledState != potledState)
   {
-    mqtt_thing();
-    if (otaupdate == 1)
+    if (ledState == 1)
+      for (int i = 0; i < light; i++)
+      {
+        analogWrite(ledPin, i);
+        delayMicroseconds(500);
+      }
+    else
+      for (int i = light; i >= 0; i--)
+      {
+        analogWrite(ledPin, i);
+        delayMicroseconds(500);
+      }
+    potledState = ledState;
+    Serial.print(F("Sending switch val "));
+    Serial.print(potledState);
+    Serial.print("...");
+    if (!potStatus.publish(potledState))
     {
-     httpServer.handleClient();
-     ArduinoOTA.handle();
+      Serial.println(F("Failed"));
     }
-    if ((light > (potlightVaule + 5)) || (light < (potlightVaule - 5)))
+    else
     {
-      potlightVaule = light;
-      Serial.print(F("Sending light val "));
-      Serial.print(potlightVaule);
-      Serial.print("...");
-      if (!potlight.publish(potlightVaule))
-      {
-        Serial.println(F("Failed"));
-      }
-      else
-      {
-        Serial.println(F("OK!"));
-      }
+      Serial.println(F("OK!"));
     }
-    if (ledState != potledState)
+  }
+  if ((light > (potlightVaule + 5)) || (light < (potlightVaule - 5)))
+  {
+    potlightVaule = light;
+    Serial.print(F("Sending light val "));
+    Serial.print(potlightVaule);
+    Serial.print("...");
+    if (!potlight.publish(potlightVaule))
     {
-      if (ledState == 1)
-        for (int i = 0; i < light; i++)
-        {
-          analogWrite(ledPin, i);
-          delayMicroseconds(500);
-        }
-      else
-        for (int i = light; i >= 0; i--)
-        {
-          analogWrite(ledPin, i);
-          delayMicroseconds(500);
-        }
-      potledState = ledState;
-      Serial.print(F("Sending switch val "));
-      Serial.print(potledState);
-      Serial.print("...");
-      if (!potStatus.publish(potledState))
-      {
-        Serial.println(F("Failed"));
-      }
-      else
-      {
-        Serial.println(F("OK!"));
-      }
+      Serial.println(F("Failed"));
     }
+    else
+    {
+      Serial.println(F("OK!"));
+    }
+  }
+  mqtt_thing();
+  if (otaupdate == 1)
+  {
+    httpServer.handleClient();
+    ArduinoOTA.handle();
   }
 }
 
@@ -256,7 +254,9 @@ void event()
         ledState = 0;
     }
     else                  //如果灯是关着的
+    {
       ledState = 1;
+    }
   }
   //potStatus.publish(ledState); //上传开关
   while (digitalRead(buttonPin) == LOW)
