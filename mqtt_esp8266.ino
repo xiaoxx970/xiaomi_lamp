@@ -65,64 +65,28 @@ Adafruit_MQTT_Subscribe isupdate = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "
 // Bug workaround for Arduino 1.6.6, it seems to need a function declaration
 // for some reason (only affects ESP8266, likely an arduino-builder bug).
 void MQTT_connect();
+void pwm();
+void event();
+void mqtt_thing();
 
 const int buttonPin = 2;
 const int ledPin = 3;
 
 unsigned long duration;
 int ledState = 0;
+int buttonFlag = 0;
 int light = 655;
 int cplight;
 bool plus = 1;
 uint16_t potlightVaule = 0;
 uint16_t potledState = 0;
 const char *host = "esp-update";
-int otaupdate = 0;
+int otaupdate = 1;
 uint8_t retries = 20;
 
-void pwm()
+void blink()
 {
-  //如果按键放开了还是进入了pwm那就把灯关了返回
-  if (digitalRead(buttonPin))
-  {
-    ledState = 0;
-    return;
-  }
-  plus = !plus;
-  while (digitalRead(buttonPin) == LOW & light >= 10 & light <= 1024)
-  {
-    //Serial.println("at pwm.while");
-    //Serial.println(light);
-    plus == 1 ? light += 1 : light -= 1;
-    if (light > 1024)
-      light = 1024;
-    if (light < 10)
-      light = 10;
-    delay(2);
-    analogWrite(ledPin, light);
-  }
-  //potlight.publish(light);   //上传亮度
-}
-
-void event()
-{
-  delay(10);
-  if (digitalRead(buttonPin) == LOW)
-  {
-    if (ledState == 1)
-    {
-      duration = pulseIn(buttonPin, LOW, 600000);
-      if (duration == 0)  //如果长按就进入pwm程序
-        pwm();
-      else                //否则把灯关掉
-        ledState = 0;
-    }
-    else                  //如果灯是关着的
-      ledState = 1;
-  }
-  //potStatus.publish(ledState); //上传开关
-  while (digitalRead(buttonPin) == LOW)
-    ; //等待按键抬起
+  buttonFlag = 1;
 }
 
 void setup()
@@ -130,6 +94,7 @@ void setup()
   Serial.begin(115200);
   //  SPIFFS.begin();
   //delay(10);
+  attachInterrupt(buttonPin, blink, FALLING);
   Serial.println("");
   Serial.println("Welcome to use Xiaoxx cloud lamp");
   Serial.println("version 0.9");
@@ -195,6 +160,111 @@ void setup()
 
 void loop()
 {
+  if (buttonFlag == 1)
+  {
+    buttonFlag = 0;
+    event();
+  }
+  else
+  {
+    mqtt_thing();
+    if (otaupdate == 1)
+    {
+     httpServer.handleClient();
+     ArduinoOTA.handle();
+    }
+    if ((light > (potlightVaule + 5)) || (light < (potlightVaule - 5)))
+    {
+      potlightVaule = light;
+      Serial.print(F("Sending light val "));
+      Serial.print(potlightVaule);
+      Serial.print("...");
+      if (!potlight.publish(potlightVaule))
+      {
+        Serial.println(F("Failed"));
+      }
+      else
+      {
+        Serial.println(F("OK!"));
+      }
+    }
+    if (ledState != potledState)
+    {
+      if (ledState == 1)
+        for (int i = 0; i < light; i++)
+        {
+          analogWrite(ledPin, i);
+          delayMicroseconds(500);
+        }
+      else
+        for (int i = light; i >= 0; i--)
+        {
+          analogWrite(ledPin, i);
+          delayMicroseconds(500);
+        }
+      potledState = ledState;
+      Serial.print(F("Sending switch val "));
+      Serial.print(potledState);
+      Serial.print("...");
+      if (!potStatus.publish(potledState))
+      {
+        Serial.println(F("Failed"));
+      }
+      else
+      {
+        Serial.println(F("OK!"));
+      }
+    }
+  }
+}
+
+void pwm()
+{
+  //如果按键放开了还是进入了pwm那就把灯关了返回
+  if (digitalRead(buttonPin))
+  {
+    ledState = 0;
+    return;
+  }
+  plus = !plus;
+  while (digitalRead(buttonPin) == LOW & light >= 10 & light <= 1024)
+  {
+    //Serial.println("at pwm.while");
+    //Serial.println(light);
+    plus == 1 ? light += 1 : light -= 1;
+    if (light > 1024)
+      light = 1024;
+    if (light < 10)
+      light = 10;
+    delay(2);
+    analogWrite(ledPin, light);
+  }
+  //potlight.publish(light);   //上传亮度
+}
+
+void event()
+{
+  delay(10);
+  if (digitalRead(buttonPin) == LOW)
+  {
+    if (ledState == 1)
+    {
+      duration = pulseIn(buttonPin, LOW, 600000);
+      if (duration == 0)  //如果长按就进入pwm程序
+        pwm();
+      else                //否则把灯关掉
+        ledState = 0;
+    }
+    else                  //如果灯是关着的
+      ledState = 1;
+  }
+  //potStatus.publish(ledState); //上传开关
+  while (digitalRead(buttonPin) == LOW)
+    ; //等待按键抬起
+}
+
+void mqtt_thing()
+{
   MQTT_connect();
   Adafruit_MQTT_Subscribe *subscription;
   while ((subscription = mqtt.readSubscription(200)))
@@ -249,57 +319,6 @@ void loop()
       }
       else
         Serial.println("OTA response off.");
-    }
-  }
-  if (otaupdate == 1)
-  {
-    httpServer.handleClient();
-    ArduinoOTA.handle();
-  }
-  if (!digitalRead(buttonPin))
-  {
-    event();
-    if ((light > (potlightVaule + 5)) || (light < (potlightVaule - 5)))
-    {
-      potlightVaule = light;
-      Serial.print(F("Sending light val "));
-      Serial.print(potlightVaule);
-      Serial.print("...");
-      if (!potlight.publish(potlightVaule))
-      {
-        Serial.println(F("Failed"));
-      }
-      else
-      {
-        Serial.println(F("OK!"));
-      }
-    }
-  }
-  if (ledState != potledState)
-  {
-    if (ledState == 1)
-      for (int i = 0; i < light; i++)
-      {
-        analogWrite(ledPin, i);
-        delayMicroseconds(500);
-      }
-    else
-      for (int i = light; i >= 0; i--)
-      {
-        analogWrite(ledPin, i);
-        delayMicroseconds(500);
-      }
-    potledState = ledState;
-    Serial.print(F("Sending switch val "));
-    Serial.print(potledState);
-    Serial.print("...");
-    if (!potStatus.publish(potledState))
-    {
-      Serial.println(F("Failed"));
-    }
-    else
-    {
-      Serial.println(F("OK!"));
     }
   }
 }
